@@ -1,0 +1,5 @@
+rootProject.name = 'socialnet'
+include 'user_m_service'
+include 'post_m_service'
+include 'comment_m_service'
+
