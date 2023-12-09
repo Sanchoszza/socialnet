@@ -18,7 +18,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-@WebServlet("/comment")
+@WebServlet("/comment/*")
 public class CommentServlet extends HttpServlet {
     private CommentRepository commentRepository;
 
@@ -35,7 +35,7 @@ public class CommentServlet extends HttpServlet {
             resp.getWriter().write(comments.toString());
         } else {
             try {
-                int commentId = Integer.parseInt(pathInfo.substring(1));
+                Long commentId = Long.parseLong(pathInfo.substring(1));
                 Comment comment = commentRepository.getCommentById(commentId);
 
                 if (comment != null) {
@@ -74,7 +74,7 @@ public class CommentServlet extends HttpServlet {
         String pathInfo = request.getPathInfo();
         if (pathInfo != null && !pathInfo.equals("/")) {
             try {
-                int commentId = Integer.parseInt(pathInfo.substring(1));
+                Long commentId = Long.parseLong(pathInfo.substring(1));
                 Comment existingComment = commentRepository.getCommentById(commentId);
 
                 if (existingComment != null) {
@@ -103,7 +103,7 @@ public class CommentServlet extends HttpServlet {
         String pathInfo = request.getPathInfo();
         if (pathInfo != null && !pathInfo.equals("/")) {
             try {
-                int commentId = Integer.parseInt(pathInfo.substring(1));
+                Long commentId = Long.parseLong(pathInfo.substring(1));
                 Comment existingComment = commentRepository.getCommentById(commentId);
 
                 if (existingComment != null) {

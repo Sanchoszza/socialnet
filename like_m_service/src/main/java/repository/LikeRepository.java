@@ -1,39 +1,37 @@
 package repository;
 
-import model.Comment;
+import model.Like;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CommentRepository {
+public class LikeRepository {
 
-    private static final String JDBC_URL = "jdbc:postgresql://localhost:5432/comment_service_db";
+    private static final String JDBC_URL = "jdbc:postgresql://localhost:5432/like_service_db";
     private static final String JDBC_USER = "postgres";
     private static final String JDBC_PASSWORD = "postgres";
 
-    private static final String COMMENT_TABLE = "CREATE TABLE IF NOT EXISTS COMMENT (" +
+    private static final String LIKE_TABLE = "CREATE TABLE IF NOT EXISTS LIKE (" +
             "ID SERIAL PRIMARY KEY," +
-            "AUTHOR_ID INT," +
-            "CONTENT TEXT," +
-            "CREATION_TIME TIMESTAMP," +
-            "LIKES INT" +
+            "USER_ID INT," +
+            "POST_ID INT" +
             ")";
 
-    public CommentRepository() {
+    public LikeRepository(){
         initializeDatabase();
     }
 
     private void initializeDatabase() {
         try (Connection connection = DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASSWORD);
              Statement statement = connection.createStatement()) {
-            statement.execute(COMMENT_TABLE);
+            statement.execute(LIKE_TABLE);
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
-    public Comment getCommentById(Long id) {
+    public Like getLikeById(Long id) {
         String query = "SELECT * FROM COMMENT WHERE ID=?";
         try (Connection connection = DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASSWORD);
              PreparedStatement preparedStatement = connection.prepareStatement(query)) {
@@ -41,7 +39,7 @@ public class CommentRepository {
             ResultSet resultSet = preparedStatement.executeQuery();
 
             if (resultSet.next()) {
-                return mapResultSetToComment(resultSet);
+                return mapResultSetToLike(resultSet);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -49,38 +47,36 @@ public class CommentRepository {
         return null;
     }
 
-    public List<Comment> getAllComments() {
-        List<Comment> comments = new ArrayList<>();
-        String query = "SELECT * FROM COMMENT";
+    public List<Like> getAllLike() {
+        List<Like> likes = new ArrayList<>();
+        String query = "SELECT * FROM LIKE";
         try (Connection connection = DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASSWORD);
              Statement statement = connection.createStatement()) {
             ResultSet resultSet = statement.executeQuery(query);
 
             while (resultSet.next()) {
-                comments.add(mapResultSetToComment(resultSet));
+                likes.add(mapResultSetToLike(resultSet));
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return comments;
+        return likes;
     }
 
-    public Comment addComment(Comment comment) {
-        String query = "INSERT INTO COMMENT (AUTHOR_ID, CONTENT, CREATION_TIME, LIKES) VALUES (?, ?, ?, ?)";
+    public Like addLike(Like like) {
+        String query = "INSERT INTO LIKE (USER_ID, POST_ID) VALUES (?, ?)";
         try (Connection connection = DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASSWORD);
              PreparedStatement preparedStatement = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
-            preparedStatement.setLong(1, comment.getAuthorId());
-            preparedStatement.setString(2, comment.getContent());
-            preparedStatement.setTimestamp(3, Timestamp.valueOf(comment.getCreationTime()));
-            preparedStatement.setInt(4, comment.getLikes());
+            preparedStatement.setLong(1, like.getUserId());
+            preparedStatement.setLong(2, like.getPostId());
 
             int affectedRows = preparedStatement.executeUpdate();
 
             if (affectedRows > 0) {
                 ResultSet generatedKeys = preparedStatement.getGeneratedKeys();
                 if (generatedKeys.next()) {
-                    comment.setCommentId(generatedKeys.getLong(1));
-                    return comment;
+                    like.setLikeId(generatedKeys.getLong(1));
+                    return like;
                 }
             }
         } catch (SQLException e) {
@@ -89,25 +85,21 @@ public class CommentRepository {
         return null;
     }
 
-    private Comment mapResultSetToComment(ResultSet resultSet) throws SQLException {
-        Comment comment = new Comment();
-        comment.setCommentId(resultSet.getLong("ID"));
-        comment.setAuthorId(resultSet.getLong("AUTHOR_ID"));
-        comment.setContent(resultSet.getString("CONTENT"));
-        comment.setCreationTime(resultSet.getTimestamp("CREATION_TIME").toLocalDateTime());
-        comment.setLikes(resultSet.getInt("LIKES"));
-        return comment;
+    private Like mapResultSetToLike(ResultSet resultSet) throws SQLException {
+        Like like = new Like();
+        like.setLikeId(resultSet.getLong("ID"));
+        like.setUserId(resultSet.getLong("USER_ID"));
+        like.setPostId(resultSet.getLong("POST_ID"));
+
+        return like;
     }
 
-    public void updateComment(Comment comment) {
-        String query = "UPDATE COMMENT SET AUTHOR_ID=?, CONTENT=?, CREATION_TIME=?, LIKES=? WHERE ID=?";
+    public void updateLike(Like like) {
+        String query = "UPDATE LIKE SET USER_ID=?, POST_ID=? WHERE ID=?";
         try (Connection connection = DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASSWORD);
              PreparedStatement preparedStatement = connection.prepareStatement(query)) {
-            preparedStatement.setLong(1, comment.getAuthorId());
-            preparedStatement.setString(2, comment.getContent());
-            preparedStatement.setTimestamp(3, Timestamp.valueOf(comment.getCreationTime()));
-            preparedStatement.setInt(4, comment.getLikes());
-            preparedStatement.setLong(5, comment.getCommentId());
+            preparedStatement.setLong(1, like.getUserId());
+            preparedStatement.setLong(2, like.getPostId());
 
             preparedStatement.executeUpdate();
         } catch (SQLException e) {
@@ -115,16 +107,15 @@ public class CommentRepository {
         }
     }
 
-    public void deleteComment(Long commentId) {
-        String query = "DELETE FROM COMMENT WHERE ID=?";
+    public void deleteLike(Long likeId) {
+        String query = "DELETE FROM LIKE WHERE ID=?";
         try (Connection connection = DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASSWORD);
              PreparedStatement preparedStatement = connection.prepareStatement(query)) {
-            preparedStatement.setLong(1, commentId);
+            preparedStatement.setLong(1, likeId);
 
             preparedStatement.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
-
 }
