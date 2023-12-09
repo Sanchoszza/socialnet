@@ -23,6 +23,9 @@ public class PostServlet  extends HttpServlet {
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
+        String parameterName = "exampleParam";
+        String parameterValue = request.getAttribute(parameterName).toString();
+
         String pathInfo = request.getPathInfo();
         if (pathInfo == null || pathInfo.equals("/")) {
             List<Post> posts = postRepository.getAllPosts();
