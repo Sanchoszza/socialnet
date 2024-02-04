@@ -1,8 +1,10 @@
 package servlet;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import model.Comment;
 import repository.CommentRepository;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -23,44 +25,53 @@ public class CommentServlet extends HttpServlet {
     }
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String pathInfo = req.getPathInfo();
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String pathInfo = request.getPathInfo();
         if (pathInfo == null || pathInfo.equals("/")) {
             List<Comment> comments = commentRepository.getAllComments();
-            resp.getWriter().write(comments.toString());
+            String jsonResponse = convertCommentToJson(comments);
+            response.setContentType("application/json");
+            response.getWriter().write(jsonResponse);
         } else {
             try {
                 Long commentId = Long.parseLong(pathInfo.substring(1));
                 Comment comment = commentRepository.getCommentById(commentId);
 
                 if (comment != null) {
-                    resp.getWriter().write(comment.toString());
+                    String jsonResponse = convertObjectToJson(comment);
+                    response.setContentType("application/json");
+                    response.getWriter().write(jsonResponse);
                 } else {
-                    resp.getWriter().write("Comment not found!");
+                    response.getWriter().write("Comment not found!");
                 }
             } catch (NumberFormatException e) {
-                resp.getWriter().write("Invalid comment ID format");
+                response.getWriter().write("Invalid comment ID format");
             }
         }
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        Long authorID = Long.parseLong(req.getParameter("authorID"));
-        String content = req.getParameter("content");
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        BufferedReader reader = request.getReader();
+        StringBuilder stringBuilder = new StringBuilder();
+        String line;
+        while ((line = reader.readLine()) != null) {
+            stringBuilder.append(line);
+        }
 
-        Comment newComment = new Comment();
-        newComment.setAuthorId(authorID);
-        newComment.setContent(content);
-        newComment.setCreationTime(LocalDateTime.now());
-        newComment.setLikes(0);
+        String json = stringBuilder.toString();
+        System.out.println("Received JSON: " + json);
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        Comment newComment = objectMapper.readValue(json, Comment.class);
+
 
         Comment addedComment = commentRepository.addComment(newComment);
 
         if (addedComment != null) {
-            resp.getWriter().write("Comment added: " + addedComment.toString());
+            response.getWriter().write(objectMapper.writeValueAsString(addedComment));
         } else {
-            resp.getWriter().write("Failed to add comment!");
+            response.getWriter().write("Failed to add comment!");
         }
     }
 
@@ -73,15 +84,11 @@ public class CommentServlet extends HttpServlet {
                 Comment existingComment = commentRepository.getCommentById(commentId);
 
                 if (existingComment != null) {
-                    Long authorID = Long.parseLong(request.getParameter("authorID"));
-                    String content = request.getParameter("content");
+                    Comment updateComment = updateCommentFromRequest(existingComment, request);
 
-                    existingComment.setAuthorId(authorID);
-                    existingComment.setContent(content);
+                    commentRepository.updateComment(updateComment);
 
-                    commentRepository.updateComment(existingComment);
-
-                    response.getWriter().write("Comment updated: " + existingComment.toString());
+                    response.getWriter().write("Comment updated: " + updateComment.toString());
                 } else {
                     response.getWriter().write("Comment not found");
                 }
@@ -113,6 +120,34 @@ public class CommentServlet extends HttpServlet {
             }
         } else {
             response.getWriter().write("Invalid request for deleting comment");
+        }
+    }
+
+    private Comment updateCommentFromRequest(Comment existingComment, HttpServletRequest request) {
+        existingComment.setAuthorId(Long.parseLong(request.getParameter("authorId")));
+        existingComment.setContent(request.getParameter("content"));
+        existingComment.setLikes(request.getIntHeader("likes"));
+
+        return existingComment;
+    }
+
+    private String convertCommentToJson(List<Comment> comments) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            return objectMapper.writeValueAsString(comments);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Error converting list to JSON";
+        }
+    }
+
+    private String convertObjectToJson(Comment comment) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            return objectMapper.writeValueAsString(comment);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Error converting object to JSON";
         }
     }
 }

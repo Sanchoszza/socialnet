@@ -12,8 +12,8 @@ public class UserRepository {
     private static final String JDBC_USER = "postgres";
     private static final String JDBC_PASSWORD = "postgres";
 
-    private static final String USER_TABLE = "CREATE TABLE IF NOT EXISTS USER (" +
-            "ID IDENTITY PRIMARY KEY," +
+    private static final String USER_TABLE = "CREATE TABLE IF NOT EXISTS USERS (" +
+            "ID SERIAL PRIMARY KEY," +
             "FIRST_NAME VARCHAR(255)," +
             "LAST_NAME VARCHAR(255)," +
             "EMAIL VARCHAR(255)," +
@@ -26,7 +26,7 @@ public class UserRepository {
     }
 
     private void initializeDatabase() {
-        try (Connection connection = DriverManager.getConnection(JDBC_URL);
+        try (Connection connection = DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASSWORD);
              Statement statement = connection.createStatement()) {
             statement.execute(USER_TABLE);
         } catch (SQLException e) {
@@ -34,9 +34,10 @@ public class UserRepository {
         }
     }
 
+
     public User getUserById(Long id) {
-        String query = "SELECT * FROM USER WHERE ID=?";
-        try (Connection connection = DriverManager.getConnection(JDBC_URL);
+        String query = "SELECT * FROM USERS WHERE ID=?";
+        try (Connection connection = DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASSWORD);
              PreparedStatement preparedStatement = connection.prepareStatement(query)) {
             preparedStatement.setLong(1, id);
             ResultSet resultSet = preparedStatement.executeQuery();
@@ -52,8 +53,8 @@ public class UserRepository {
 
     public List<User> getAllUsers() {
         List<User> users = new ArrayList<>();
-        String query = "SELECT * FROM USER";
-        try (Connection connection = DriverManager.getConnection(JDBC_URL);
+        String query = "SELECT * FROM USERS";
+        try (Connection connection = DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASSWORD);
              Statement statement = connection.createStatement()) {
             ResultSet resultSet = statement.executeQuery(query);
 
@@ -67,9 +68,9 @@ public class UserRepository {
     }
 
     public User registerUser(User user) {
-        String query = "INSERT INTO USER (FIRST_NAME, LAST_NAME, EMAIL, PASSWORD_HASH, REGISTRATION_DATE) " +
+        String query = "INSERT INTO USERS (FIRST_NAME, LAST_NAME, EMAIL, PASSWORD_HASH, REGISTRATION_DATE) " +
                 "VALUES (?, ?, ?, ?, ?)";
-        try (Connection connection = DriverManager.getConnection(JDBC_URL);
+        try (Connection connection = DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASSWORD);
              PreparedStatement preparedStatement = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
             preparedStatement.setString(1, user.getFirstName());
             preparedStatement.setString(2, user.getLastName());
@@ -105,7 +106,7 @@ public class UserRepository {
 
 
     public void updateUser(User user) {
-        String query = "UPDATE USER SET FIRST_NAME=?, LAST_NAME=?, EMAIL=?, PASSWORD_HASH=? WHERE ID=?";
+        String query = "UPDATE USERS SET FIRST_NAME=?, LAST_NAME=?, EMAIL=?, PASSWORD_HASH=? WHERE ID=?";
         try (Connection connection = DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASSWORD);
              PreparedStatement preparedStatement = connection.prepareStatement(query)) {
             preparedStatement.setString(1, user.getFirstName());
@@ -121,7 +122,7 @@ public class UserRepository {
     }
 
     public void deleteUser(Long userId) {
-        String query = "DELETE FROM USER WHERE ID=?";
+        String query = "DELETE FROM USERS WHERE ID=?";
         try (Connection connection = DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASSWORD);
              PreparedStatement preparedStatement = connection.prepareStatement(query)) {
             preparedStatement.setLong(1, userId);

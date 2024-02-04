@@ -1,5 +1,6 @@
 package servlet;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import model.Like;
 import repository.LikeRepository;
 
@@ -9,6 +10,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.List;
 
@@ -23,42 +25,52 @@ public class LikeServlet extends HttpServlet {
     }
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest req, HttpServletResponse response) throws ServletException, IOException {
         String pathInfo = req.getPathInfo();
         if (pathInfo == null || pathInfo.equals("/")){
-            List<Like> users = likeRepository.getAllLike();
-            resp.getWriter().write(users.toString());
+            List<Like> likes = likeRepository.getAllLike();
+            String jsonResponse = convertLikeToJson(likes);
+            response.setContentType("application/json");
+            response.getWriter().write(jsonResponse);
         } else {
             try{
-                Long userId = Long.parseLong(pathInfo.substring(1));
-                Like user = likeRepository.getLikeById(userId);
+                Long likeId = Long.parseLong(pathInfo.substring(1));
+                Like like = likeRepository.getLikeById(likeId);
 
-                if (user != null){
-                    resp.getWriter().write(user.toString());
+                if (like != null){
+                    String jsonResponse = convertObjectToJson(like);
+                    response.setContentType("application/json");
+                    response.getWriter().write(jsonResponse);
                 } else {
-                    resp.getWriter().write("User not found!");
+                    response.getWriter().write("Like not found!");
                 }
             } catch (NumberFormatException e){
-                resp.getWriter().write("Invalid user ID format");
+                response.getWriter().write("Invalid like ID format");
             }
         }
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        Long userId = Long.parseLong(req.getParameter("userId"));
-        Long postId = Long.parseLong(req.getParameter("postId"));
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        BufferedReader reader = request.getReader();
+        StringBuilder stringBuilder = new StringBuilder();
+        String line;
+        while ((line = reader.readLine()) != null) {
+            stringBuilder.append(line);
+        }
 
-        Like newLike = new Like();
-        newLike.setUserId(userId);
-        newLike.setPostId(postId);
+        String json = stringBuilder.toString();
+        System.out.println("Received JSON: " + json);
 
-        Like addLike = likeRepository.addLike(newLike);
+        ObjectMapper objectMapper = new ObjectMapper();
+        Like newLike = objectMapper.readValue(json, Like.class);
 
-        if (addLike != null){
-            resp.getWriter().write("Like added: " + addLike.toString());
+        Like addedLike = likeRepository.addLike(newLike);
+
+        if (addedLike != null) {
+            response.getWriter().write(objectMapper.writeValueAsString(addedLike));
         } else {
-            resp.getWriter().write("Failed to like!");
+            response.getWriter().write("Failed to add post!");
         }
     }
 
@@ -71,15 +83,11 @@ public class LikeServlet extends HttpServlet {
                 Like existingLike = likeRepository.getLikeById(likeId);
 
                 if (existingLike != null) {
-                    Long userId = Long.parseLong(request.getParameter("userId"));
-                    Long postId = Long.parseLong(request.getParameter("postId"));
+                    Like updatedPost = updateLikeFromRequest(existingLike, request);
 
-                    existingLike.setUserId(userId);
-                    existingLike.setPostId(postId);
+                    likeRepository.updateLike(updatedPost);
 
-                    likeRepository.updateLike(existingLike);
-
-                    response.getWriter().write("Like updated: " + existingLike.toString());
+                    response.getWriter().write("Like updated: " + updatedPost.toString());
                 } else {
                     response.getWriter().write("Like not found");
                 }
@@ -111,6 +119,33 @@ public class LikeServlet extends HttpServlet {
             }
         } else {
             response.getWriter().write("Invalid request for deleting Like");
+        }
+    }
+
+    private Like updateLikeFromRequest(Like existingLike, HttpServletRequest request) {
+        existingLike.setUserId(Long.parseLong(request.getParameter("userId")));
+        existingLike.setPostId(Long.parseLong(request.getParameter("postId")));
+
+        return existingLike;
+    }
+
+    private String convertLikeToJson(List<Like> posts) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            return objectMapper.writeValueAsString(posts);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Error converting list to JSON";
+        }
+    }
+
+    private String convertObjectToJson(Like like) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            return objectMapper.writeValueAsString(like);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Error converting object to JSON";
         }
     }
 }

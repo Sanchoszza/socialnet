@@ -1,0 +1,15 @@
+spring:
+  main:
+    allow-circular-references: true
+  jpa:
+    generate-ddl: true
+    open-in-view: false
+  datasource:
+    url: jdbc:postgresql://localhost:5432/comment_service_db
+    username: postgres
+    password: postgres
+    hikari:
+      schema: comment_schema
+      connection-ini-sql: CREATE SCHEMA IF NOT EXISTS comment_schema
+      connection-timeout: 10000
+

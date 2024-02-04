@@ -1,6 +1,5 @@
 package model;
 
-import java.util.List;
 
 public class Post {
 
@@ -17,7 +16,7 @@ public class Post {
     }
 
     public Post(Long postId, Long authorId, String content, String creationTime,
-                List<String> attachment, int likes, int comments, int views, String tags) {
+                int likes, int comments, int views, String tags) {
         this.postId = postId;
         this.authorId = authorId;
         this.content = content;
@@ -92,4 +91,5 @@ public class Post {
     public void setTags(String tags) {
         this.tags = tags;
     }
+
 }

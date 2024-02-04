@@ -16,9 +16,9 @@ public class CommentRepository {
             "ID SERIAL PRIMARY KEY," +
             "AUTHOR_ID INT," +
             "CONTENT TEXT," +
-            "CREATION_TIME TIMESTAMP," +
             "LIKES INT" +
             ")";
+//    "CREATION_TIME TIMESTAMP" +
 
     public CommentRepository() {
         initializeDatabase();
@@ -66,13 +66,14 @@ public class CommentRepository {
     }
 
     public Comment addComment(Comment comment) {
-        String query = "INSERT INTO COMMENT (AUTHOR_ID, CONTENT, CREATION_TIME, LIKES) VALUES (?, ?, ?, ?)";
+//        , CREATION_TIME
+        String query = "INSERT INTO COMMENT (AUTHOR_ID, CONTENT, LIKES) VALUES (?, ?, ?)";
         try (Connection connection = DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASSWORD);
              PreparedStatement preparedStatement = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
             preparedStatement.setLong(1, comment.getAuthorId());
             preparedStatement.setString(2, comment.getContent());
-            preparedStatement.setTimestamp(3, Timestamp.valueOf(comment.getCreationTime()));
-            preparedStatement.setInt(4, comment.getLikes());
+            preparedStatement.setInt(3, comment.getLikes());
+//            preparedStatement.setTimestamp(4, new Timestamp(comment.getCreationTime().getTime()));
 
             int affectedRows = preparedStatement.executeUpdate();
 
@@ -94,20 +95,19 @@ public class CommentRepository {
         comment.setCommentId(resultSet.getLong("ID"));
         comment.setAuthorId(resultSet.getLong("AUTHOR_ID"));
         comment.setContent(resultSet.getString("CONTENT"));
-        comment.setCreationTime(resultSet.getTimestamp("CREATION_TIME").toLocalDateTime());
         comment.setLikes(resultSet.getInt("LIKES"));
+//        comment.setCreationTime(resultSet.getTimestamp("CREATION_TIME"));
         return comment;
     }
 
     public void updateComment(Comment comment) {
-        String query = "UPDATE COMMENT SET AUTHOR_ID=?, CONTENT=?, CREATION_TIME=?, LIKES=? WHERE ID=?";
+//        CREATION_TIME=?
+        String query = "UPDATE COMMENT SET AUTHOR_ID=?, CONTENT=?, LIKES=? WHERE ID=?";
         try (Connection connection = DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASSWORD);
              PreparedStatement preparedStatement = connection.prepareStatement(query)) {
             preparedStatement.setLong(1, comment.getAuthorId());
             preparedStatement.setString(2, comment.getContent());
-            preparedStatement.setTimestamp(3, Timestamp.valueOf(comment.getCreationTime()));
-            preparedStatement.setInt(4, comment.getLikes());
-            preparedStatement.setLong(5, comment.getCommentId());
+            preparedStatement.setInt(3, comment.getLikes());
 
             preparedStatement.executeUpdate();
         } catch (SQLException e) {

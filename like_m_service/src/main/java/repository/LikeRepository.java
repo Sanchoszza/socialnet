@@ -12,7 +12,7 @@ public class LikeRepository {
     private static final String JDBC_USER = "postgres";
     private static final String JDBC_PASSWORD = "postgres";
 
-    private static final String LIKE_TABLE = "CREATE TABLE IF NOT EXISTS LIKE (" +
+    private static final String LIKE_TABLE = "CREATE TABLE IF NOT EXISTS LIKES (" +
             "ID SERIAL PRIMARY KEY," +
             "USER_ID INT," +
             "POST_ID INT" +
@@ -32,7 +32,7 @@ public class LikeRepository {
     }
 
     public Like getLikeById(Long id) {
-        String query = "SELECT * FROM COMMENT WHERE ID=?";
+        String query = "SELECT * FROM LIKES WHERE ID=?";
         try (Connection connection = DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASSWORD);
              PreparedStatement preparedStatement = connection.prepareStatement(query)) {
             preparedStatement.setLong(1, id);
@@ -49,7 +49,7 @@ public class LikeRepository {
 
     public List<Like> getAllLike() {
         List<Like> likes = new ArrayList<>();
-        String query = "SELECT * FROM LIKE";
+        String query = "SELECT * FROM LIKES";
         try (Connection connection = DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASSWORD);
              Statement statement = connection.createStatement()) {
             ResultSet resultSet = statement.executeQuery(query);
@@ -64,7 +64,7 @@ public class LikeRepository {
     }
 
     public Like addLike(Like like) {
-        String query = "INSERT INTO LIKE (USER_ID, POST_ID) VALUES (?, ?)";
+        String query = "INSERT INTO LIKES (USER_ID, POST_ID) VALUES (?, ?)";
         try (Connection connection = DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASSWORD);
              PreparedStatement preparedStatement = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
             preparedStatement.setLong(1, like.getUserId());
@@ -95,7 +95,7 @@ public class LikeRepository {
     }
 
     public void updateLike(Like like) {
-        String query = "UPDATE LIKE SET USER_ID=?, POST_ID=? WHERE ID=?";
+        String query = "UPDATE LIKES SET USER_ID=?, POST_ID=? WHERE ID=?";
         try (Connection connection = DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASSWORD);
              PreparedStatement preparedStatement = connection.prepareStatement(query)) {
             preparedStatement.setLong(1, like.getUserId());
@@ -108,7 +108,7 @@ public class LikeRepository {
     }
 
     public void deleteLike(Long likeId) {
-        String query = "DELETE FROM LIKE WHERE ID=?";
+        String query = "DELETE FROM LIKES WHERE ID=?";
         try (Connection connection = DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASSWORD);
              PreparedStatement preparedStatement = connection.prepareStatement(query)) {
             preparedStatement.setLong(1, likeId);

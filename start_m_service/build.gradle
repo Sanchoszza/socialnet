@@ -36,6 +36,10 @@ dependencies {
 
     implementation 'org.projectlombok:lombok:1.18.26'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.1'
+
+    implementation project(':user_m_service')
+    implementation project(':post_m_service')
+
 }
 
 test {

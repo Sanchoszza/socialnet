@@ -1,24 +1,25 @@
 package model;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 
 public class Comment {
 
     private Long commentId;
     private Long authorId;
     private String content;
-    private LocalDateTime creationTime;
     private int likes;
+//    private Date creationTime;
 
     public Comment() {
     }
 
-    public Comment(Long commentId, Long authorId, String content, LocalDateTime creationTime, int likes) {
+    public Comment(Long commentId, Long authorId, String content, Date creationTime, int likes) {
         this.commentId = commentId;
         this.authorId = authorId;
         this.content = content;
-        this.creationTime = creationTime;
         this.likes = likes;
+//        this.creationTime = creationTime;
     }
 
     public Long getCommentId() {
@@ -45,13 +46,13 @@ public class Comment {
         this.content = content;
     }
 
-    public LocalDateTime getCreationTime() {
-        return creationTime;
-    }
-
-    public void setCreationTime(LocalDateTime creationTime) {
-        this.creationTime = creationTime;
-    }
+//    public Date getCreationTime() {
+//        return creationTime;
+//    }
+//
+//    public void setCreationTime(Date creationTime) {
+//        this.creationTime = creationTime;
+//    }
 
     public int getLikes() {
         return likes;

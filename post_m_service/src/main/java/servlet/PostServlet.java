@@ -8,11 +8,12 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.List;
 
 @WebServlet("/posts/*")
-public class PostServlet  extends HttpServlet {
+public class PostServlet extends HttpServlet {
 
     private PostRepository postRepository;
 
@@ -23,9 +24,6 @@ public class PostServlet  extends HttpServlet {
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
-        String parameterName = "exampleParam";
-        String parameterValue = request.getAttribute(parameterName).toString();
-
         String pathInfo = request.getPathInfo();
         if (pathInfo == null || pathInfo.equals("/")) {
             List<Post> posts = postRepository.getAllPosts();
@@ -46,19 +44,34 @@ public class PostServlet  extends HttpServlet {
                     response.getWriter().write("Post not found");
                 }
             } catch (NumberFormatException e) {
-                response.getWriter().write("Invalid post ID format");
+                response.getWriter().write("Invalid post ID format" + e);
             }
         }
     }
 
-
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
-        Post newPost = createPostFromRequest(request);
+        BufferedReader reader = request.getReader();
+        StringBuilder stringBuilder = new StringBuilder();
+        String line;
+        while ((line = reader.readLine()) != null) {
+            stringBuilder.append(line);
+        }
 
-        postRepository.addPost(newPost);
+        String json = stringBuilder.toString();
+        System.out.println("Received JSON: " + json);
 
-        response.setStatus(HttpServletResponse.SC_CREATED);
+        ObjectMapper objectMapper = new ObjectMapper();
+        Post newPost = objectMapper.readValue(json, Post.class);
+
+        Post addedPost = postRepository.addPost(newPost);
+
+        if (addedPost != null) {
+            response.getWriter().write(objectMapper.writeValueAsString(addedPost));
+        } else {
+            response.getWriter().write("Failed to add post!");
+        }
+
     }
 
     protected void doPut(HttpServletRequest request, HttpServletResponse response)
@@ -92,11 +105,10 @@ public class PostServlet  extends HttpServlet {
         if (pathInfo != null && !pathInfo.equals("/")) {
             try {
                 Long postId = Long.parseLong(pathInfo.substring(1));
-                Post existingPost = PostRepository.getPostById(postId);
+                Post existingPost = postRepository.getPostById(postId);
 
                 if (existingPost != null) {
-                    // Удаление поста из репозитория
-                    PostRepository.deletePost(postId);
+                    postRepository.deletePost(postId);
 
                     response.getWriter().write("Post deleted: " + existingPost.toString());
                 } else {
@@ -123,15 +135,30 @@ public class PostServlet  extends HttpServlet {
     private Post createPostFromRequest(HttpServletRequest request) {
         Post newPost = new Post();
         newPost.setContent(request.getParameter("content"));
-        newPost.setAuthorId(Long.parseLong(request.getParameter("authorId")));
+        newPost.setAuthorId(parseLongOrDefault(request.getParameter("authorId"), 0L));
         newPost.setCreationTime(request.getParameter("creationTime"));
-        newPost.setLikes(Integer.parseInt(request.getParameter("likes")));
-        newPost.setComments(Integer.parseInt(request.getParameter("comments")));
-        newPost.setViews(Integer.parseInt(request.getParameter("views")));
+        newPost.setLikes(parseIntOrDefault(request.getParameter("likes"), 0));
+        newPost.setComments(parseIntOrDefault(request.getParameter("comments"), 0));
+        newPost.setViews(parseIntOrDefault(request.getParameter("views"), 0));
         newPost.setTags(request.getParameter("tags"));
 
-
         return newPost;
+    }
+
+    private Long parseLongOrDefault(String value, Long defaultValue) {
+        try {
+            return Long.parseLong(value);
+        } catch (NumberFormatException | NullPointerException e) {
+            return defaultValue;
+        }
+    }
+
+    private Integer parseIntOrDefault(String value, Integer defaultValue) {
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException | NullPointerException e) {
+            return defaultValue;
+        }
     }
 
 
@@ -147,17 +174,6 @@ public class PostServlet  extends HttpServlet {
         return existingPost;
     }
 
-
-    private String convertListToJson(List<Post> posts) {
-        try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            return objectMapper.writeValueAsString(posts);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "Error converting list to JSON";
-        }
-    }
-
     private String convertObjectToJson(Post post) {
         try {
             ObjectMapper objectMapper = new ObjectMapper();
@@ -167,5 +183,4 @@ public class PostServlet  extends HttpServlet {
             return "Error converting object to JSON";
         }
     }
-
 }
