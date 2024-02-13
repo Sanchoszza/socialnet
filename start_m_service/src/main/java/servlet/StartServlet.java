@@ -118,88 +118,42 @@ public class StartServlet extends HttpServlet {
     }
 
 
-    //    @Override
-//    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-//        String pathInfo = req.getPathInfo();
-//        if (pathInfo == null || pathInfo.equals("/")) {
-//            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-//            return;
-//        }
-//        String[] pathParts = pathInfo.split("/");
-//        if (pathParts.length < 3) {
-//            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-//            return;
-//        }
-//        String id = pathParts[2];
-//
-//        if (pathInfo.startsWith("/users/")){
-//            handleDeleteRequest("http://localhost:8026/users/" + id, resp);
-//        } else if (pathInfo.startsWith("/posts/")){
-//            handleDeleteRequest("http://localhost:8027/posts/" + id, resp);
-//        } else if (pathInfo.startsWith("/likes/")){
-//            handleDeleteRequest("http://localhost:8024/likes/" + id, resp);
-//        } else if (pathInfo.startsWith("/comments/")){
-//            handleDeleteRequest("http://localhost:8023/comments/" + id, resp);
-//        }
-//    }
-//
-//    private void handleDeleteRequest(String url, HttpServletResponse resp) throws IOException {
-//        HttpClient client = HttpClientBuilder.create().build();
-//        HttpDelete deleteRequest = new HttpDelete(url);
-//
-//        HttpResponse response = client.execute(deleteRequest);
-//
-//        HttpEntity entity = response.getEntity();
-//        String responseString = IOUtils.toString(entity.getContent());
-//
-//        resp.setContentType("application/json");
-//        resp.getWriter().write(responseString);
-//    }
+        @Override
+    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String pathInfo = req.getPathInfo();
+        if (pathInfo == null || pathInfo.equals("/")) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            return;
+        }
+        String[] pathParts = pathInfo.split("/");
+        if (pathParts.length < 3) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            return;
+        }
+        String id = pathParts[2];
+
+        if (pathInfo.startsWith("/users/")){
+            handleDeleteRequest("http://localhost:8026/users/" + id, resp);
+        } else if (pathInfo.startsWith("/posts/")){
+            handleDeleteRequest("http://localhost:8027/posts/" + id, resp);
+        } else if (pathInfo.startsWith("/likes/")){
+            handleDeleteRequest("http://localhost:8024/likes/" + id, resp);
+        } else if (pathInfo.startsWith("/comments/")){
+            handleDeleteRequest("http://localhost:8023/comments/" + id, resp);
+        }
+    }
+
+    private void handleDeleteRequest(String url, HttpServletResponse resp) throws IOException {
+        HttpClient client = HttpClientBuilder.create().build();
+        HttpDelete deleteRequest = new HttpDelete(url);
+
+        HttpResponse response = client.execute(deleteRequest);
+
+        HttpEntity entity = response.getEntity();
+        String responseString = IOUtils.toString(entity.getContent());
+
+        resp.setContentType("application/json");
+        resp.getWriter().write(responseString);
+    }
 }
-
-
-//    @Override
-//    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-//        String pathInfo = req.getPathInfo();
-//        if (pathInfo == null || pathInfo.equals("/")) {
-//            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-//            return;
-//        }
-//        String[] pathParts = pathInfo.split("/");
-//        if (pathParts.length < 3) {
-//            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-//            return;
-//        }
-//        String id = pathParts[2];
-//
-//        if (pathInfo.startsWith("/users/")){
-//            handlePostRequest("http://localhost:8026/users/" + id, req, resp);
-//        } else if (pathInfo.startsWith("/posts/")){
-//            handlePostRequest("http://localhost:8027/posts/" + id, req, resp);
-//        } else if (pathInfo.startsWith("/likes/")){
-//            handlePostRequest("http://localhost:8024/likes/" + id, req, resp);
-//        } else if (pathInfo.startsWith("/comments/")){
-//            handlePostRequest("http://localhost:8023/comments/" + id, req, resp);
-//        }
-//    }
-//
-//
-
-//
-//    private void handlePostRequest(String url, HttpServletRequest req, HttpServletResponse resp) throws IOException {
-//        HttpClient client = HttpClientBuilder.create().build();
-//        HttpPost postRequest = new HttpPost(url);
-//
-//        String requestData = IOUtils.toString(req.getReader());
-//
-//        postRequest.setEntity(new StringEntity(requestData));
-//
-//        HttpResponse response = client.execute(postRequest);
-//
-//        HttpEntity entity = response.getEntity();
-//        String responseString = IOUtils.toString(entity.getContent());
-//
-//        resp.setContentType("application/json");
-//        resp.getWriter().write(responseString);
-//    }
 
