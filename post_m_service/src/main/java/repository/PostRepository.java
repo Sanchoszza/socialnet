@@ -101,8 +101,9 @@ public class PostRepository {
             preparedStatement.setString(2, post.getContent());
             preparedStatement.setString(3, post.getCreationTime());
             preparedStatement.setInt(4, 0);
-            preparedStatement.setInt(5, post.getViews());
-            preparedStatement.setString(6, post.getTags());
+            preparedStatement.setInt(5, post.getComments().size());
+            preparedStatement.setInt(6, post.getViews());
+            preparedStatement.setString(7, post.getTags());
             preparedStatement.executeUpdate();
 
             ResultSet generatedKeys = preparedStatement.getGeneratedKeys();
