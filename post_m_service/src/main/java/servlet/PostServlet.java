@@ -2,6 +2,7 @@ package servlet;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import model.Post;
+import repository.CommentRepository;
 import repository.PostRepository;
 
 import javax.servlet.annotation.WebServlet;
@@ -17,37 +18,44 @@ public class PostServlet extends HttpServlet {
 
     private PostRepository postRepository;
 
+    private CommentRepository commentRepository;
+
     @Override
     public void init() {
         postRepository = new PostRepository();
     }
 
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String pathInfo = request.getPathInfo();
-        if (pathInfo == null || pathInfo.equals("/")) {
-            List<Post> posts = postRepository.getAllPosts();
-
-            String jsonResponse = convertPostsToJson(posts);
-            response.setContentType("application/json");
-            response.getWriter().write(jsonResponse);
-        } else {
+        if (pathInfo != null && !pathInfo.equals("/")) {
             try {
                 Long postId = Long.parseLong(pathInfo.substring(1));
                 Post post = postRepository.getPostById(postId);
 
                 if (post != null) {
-                    String jsonResponse = convertObjectToJson(post);
+                    post.setComments(postRepository.loadCommentsForPost(postId));
+
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    String jsonResponse = objectMapper.writeValueAsString(post);
                     response.setContentType("application/json");
                     response.getWriter().write(jsonResponse);
                 } else {
                     response.getWriter().write("Post not found");
                 }
             } catch (NumberFormatException e) {
-                response.getWriter().write("Invalid post ID format" + e);
+                response.getWriter().write("Invalid post ID format: " + e);
             }
+        } else {
+            List<Post> posts = postRepository.getAllPosts();
+            String jsonResponse = convertPostsToJson(posts);
+            response.setContentType("application/json");
+            response.getWriter().write(jsonResponse);
         }
     }
+
+
+
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
@@ -138,7 +146,6 @@ public class PostServlet extends HttpServlet {
         newPost.setAuthorId(parseLongOrDefault(request.getParameter("authorId"), 0L));
         newPost.setCreationTime(request.getParameter("creationTime"));
         newPost.setLikes(parseIntOrDefault(request.getParameter("likes"), 0));
-        newPost.setComments(parseIntOrDefault(request.getParameter("comments"), 0));
         newPost.setViews(parseIntOrDefault(request.getParameter("views"), 0));
         newPost.setTags(request.getParameter("tags"));
 
@@ -167,7 +174,6 @@ public class PostServlet extends HttpServlet {
         existingPost.setAuthorId(Long.parseLong(request.getParameter("authorId")));
         existingPost.setCreationTime(request.getParameter("creationTime"));
         existingPost.setLikes(Integer.parseInt(request.getParameter("likes")));
-        existingPost.setComments(Integer.parseInt(request.getParameter("comments")));
         existingPost.setViews(Integer.parseInt(request.getParameter("views")));
         existingPost.setTags(request.getParameter("tags"));
 

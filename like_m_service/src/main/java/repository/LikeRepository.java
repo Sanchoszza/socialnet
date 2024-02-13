@@ -1,6 +1,7 @@
 package repository;
 
 import model.Like;
+import utils.PropertyManager;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -8,9 +9,15 @@ import java.util.List;
 
 public class LikeRepository {
 
-    private static final String JDBC_URL = "jdbc:postgresql://localhost:5432/like_service_db";
-    private static final String JDBC_USER = "postgres";
-    private static final String JDBC_PASSWORD = "postgres";
+//    private static final String JDBC_URL = "jdbc:postgresql://localhost:5432/like_service_db";
+//    private static final String JDBC_USER = "postgres";
+//    private static final String JDBC_PASSWORD = "postgres";
+
+    private String JDBC_URL;
+    private String JDBC_USER;
+    private String JDBC_PASSWORD;
+
+    private PostRepository postRepository;
 
     private static final String LIKE_TABLE = "CREATE TABLE IF NOT EXISTS LIKES (" +
             "ID SERIAL PRIMARY KEY," +
@@ -19,6 +26,11 @@ public class LikeRepository {
             ")";
 
     public LikeRepository(){
+        JDBC_URL = PropertyManager.getPropertyAsString("db.connection.string",
+                "jdbc:postgresql://localhost:5432/like_service_db");
+        JDBC_USER = PropertyManager.getPropertyAsString("db.connection.user", "postgres");
+        JDBC_PASSWORD = PropertyManager.getPropertyAsString("db.connection.password", "postgres");
+        postRepository = new PostRepository();
         initializeDatabase();
     }
 
@@ -102,10 +114,24 @@ public class LikeRepository {
             preparedStatement.setLong(2, like.getPostId());
 
             preparedStatement.executeUpdate();
+
+            // После обновления лайка также нужно обновить количество лайков для поста
+            updatePostLikesCount(like.getPostId());
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
+
+    private void updatePostLikesCount(Long postId) {
+        // Получаем текущее количество лайков для поста
+        int currentLikes = postRepository.getLikesForPost(postId);
+        // Обновляем количество лайков для поста
+        int updatedLikes = currentLikes + 1; // Предположим, что это увеличивает количество лайков на 1
+        // Обновляем количество лайков для поста в репозитории постов
+        postRepository.updatePostLikes(postId, updatedLikes);
+    }
+
+
 
     public void deleteLike(Long likeId) {
         String query = "DELETE FROM LIKES WHERE ID=?";
@@ -113,9 +139,17 @@ public class LikeRepository {
              PreparedStatement preparedStatement = connection.prepareStatement(query)) {
             preparedStatement.setLong(1, likeId);
 
-            preparedStatement.executeUpdate();
+            int affectedRows = preparedStatement.executeUpdate();
+            if (affectedRows > 0) {
+                // Если лайк успешно удален, обновляем количество лайков для поста
+                Like like = getLikeById(likeId);
+                if (like != null) {
+                    updatePostLikesCount(like.getPostId());
+                }
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
+
 }

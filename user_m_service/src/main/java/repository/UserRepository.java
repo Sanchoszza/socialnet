@@ -1,6 +1,7 @@
 package repository;
 
 import model.User;
+import utils.PropertyManager;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -8,9 +9,13 @@ import java.util.List;
 
 public class UserRepository {
 
-    private static final String JDBC_URL = "jdbc:postgresql://localhost:5432/user_m_service_db";
-    private static final String JDBC_USER = "postgres";
-    private static final String JDBC_PASSWORD = "postgres";
+//    private static final String JDBC_URL = "jdbc:postgresql://localhost:5432/user_m_service_db";
+//    private static final String JDBC_USER = "postgres";
+//    private static final String JDBC_PASSWORD = "postgres";
+
+    private String JDBC_URL;
+    private String JDBC_USER;
+    private String JDBC_PASSWORD;
 
     private static final String USER_TABLE = "CREATE TABLE IF NOT EXISTS USERS (" +
             "ID SERIAL PRIMARY KEY," +
@@ -22,6 +27,10 @@ public class UserRepository {
             ")";
 
     public UserRepository() {
+        JDBC_URL = PropertyManager.getPropertyAsString("db.connection.string",
+                "jdbc:postgresql://localhost:5432/user_m_service_db");
+        JDBC_USER = PropertyManager.getPropertyAsString("db.connection.user", "postgres");
+        JDBC_PASSWORD = PropertyManager.getPropertyAsString("db.connection.password", "postgres");
         initializeDatabase();
     }
 

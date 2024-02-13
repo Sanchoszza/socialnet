@@ -3,8 +3,8 @@ package servlet;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import model.Like;
 import repository.LikeRepository;
+import repository.PostRepository;
 
-import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -18,33 +18,35 @@ import java.util.List;
 public class LikeServlet extends HttpServlet {
 
     private LikeRepository likeRepository;
+    private PostRepository postRepository;
 
     @Override
-    public void init(ServletConfig config) throws ServletException {
+    public void init() {
         likeRepository = new LikeRepository();
+        postRepository = new PostRepository();
     }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse response) throws ServletException, IOException {
         String pathInfo = req.getPathInfo();
-        if (pathInfo == null || pathInfo.equals("/")){
+        if (pathInfo == null || pathInfo.equals("/")) {
             List<Like> likes = likeRepository.getAllLike();
             String jsonResponse = convertLikeToJson(likes);
             response.setContentType("application/json");
             response.getWriter().write(jsonResponse);
         } else {
-            try{
+            try {
                 Long likeId = Long.parseLong(pathInfo.substring(1));
                 Like like = likeRepository.getLikeById(likeId);
 
-                if (like != null){
+                if (like != null) {
                     String jsonResponse = convertObjectToJson(like);
                     response.setContentType("application/json");
                     response.getWriter().write(jsonResponse);
                 } else {
                     response.getWriter().write("Like not found!");
                 }
-            } catch (NumberFormatException e){
+            } catch (NumberFormatException e) {
                 response.getWriter().write("Invalid like ID format");
             }
         }
@@ -68,6 +70,8 @@ public class LikeServlet extends HttpServlet {
         Like addedLike = likeRepository.addLike(newLike);
 
         if (addedLike != null) {
+            Long postId = addedLike.getPostId();
+            updatePostLikes(postId, 1); // Увеличиваем количество лайков на 1
             response.getWriter().write(objectMapper.writeValueAsString(addedLike));
         } else {
             response.getWriter().write("Failed to add post!");
@@ -83,11 +87,11 @@ public class LikeServlet extends HttpServlet {
                 Like existingLike = likeRepository.getLikeById(likeId);
 
                 if (existingLike != null) {
-                    Like updatedPost = updateLikeFromRequest(existingLike, request);
+                    Like updatedLike = updateLikeFromRequest(existingLike, request);
 
-                    likeRepository.updateLike(updatedPost);
+                    likeRepository.updateLike(updatedLike);
 
-                    response.getWriter().write("Like updated: " + updatedPost.toString());
+                    response.getWriter().write("Like updated: " + updatedLike.toString());
                 } else {
                     response.getWriter().write("Like not found");
                 }
@@ -109,7 +113,8 @@ public class LikeServlet extends HttpServlet {
 
                 if (existingLike != null) {
                     likeRepository.deleteLike(likeId);
-
+                    Long postId = existingLike.getPostId();
+                    updatePostLikes(postId, -1); // Уменьшаем количество лайков на 1
                     response.getWriter().write("Like deleted: " + existingLike.toString());
                 } else {
                     response.getWriter().write("Like not found");
@@ -129,10 +134,10 @@ public class LikeServlet extends HttpServlet {
         return existingLike;
     }
 
-    private String convertLikeToJson(List<Like> posts) {
+    private String convertLikeToJson(List<Like> likes) {
         try {
             ObjectMapper objectMapper = new ObjectMapper();
-            return objectMapper.writeValueAsString(posts);
+            return objectMapper.writeValueAsString(likes);
         } catch (Exception e) {
             e.printStackTrace();
             return "Error converting list to JSON";
@@ -147,5 +152,14 @@ public class LikeServlet extends HttpServlet {
             e.printStackTrace();
             return "Error converting object to JSON";
         }
+    }
+
+    private void updatePostLikes(Long postId, int delta) {
+        // Получаем текущее количество лайков для поста
+        int currentLikes = postRepository.getLikesForPost(postId);
+        // Обновляем количество лайков для поста с учетом приращения
+        int updatedLikes = currentLikes + delta;
+        // Обновляем количество лайков для поста в репозитории
+        postRepository.updatePostLikes(postId, updatedLikes);
     }
 }

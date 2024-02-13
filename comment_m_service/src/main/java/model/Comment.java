@@ -6,6 +6,7 @@ import java.util.Date;
 public class Comment {
 
     private Long commentId;
+    private Long postId;
     private Long authorId;
     private String content;
     private int likes;
@@ -14,8 +15,9 @@ public class Comment {
     public Comment() {
     }
 
-    public Comment(Long commentId, Long authorId, String content, Date creationTime, int likes) {
+    public Comment(Long commentId, Long postId, Long authorId, String content, Date creationTime, int likes) {
         this.commentId = commentId;
+        this.postId = postId;
         this.authorId = authorId;
         this.content = content;
         this.likes = likes;
@@ -28,6 +30,14 @@ public class Comment {
 
     public void setCommentId(Long commentId) {
         this.commentId = commentId;
+    }
+
+    public Long getPostId() {
+        return postId;
+    }
+
+    public void setPostId(Long postId) {
+        this.postId = postId;
     }
 
     public Long getAuthorId() {

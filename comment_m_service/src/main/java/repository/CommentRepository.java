@@ -1,6 +1,7 @@
 package repository;
 
 import model.Comment;
+import utils.PropertyManager;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -8,19 +9,27 @@ import java.util.List;
 
 public class CommentRepository {
 
-    private static final String JDBC_URL = "jdbc:postgresql://localhost:5432/comment_service_db";
-    private static final String JDBC_USER = "postgres";
-    private static final String JDBC_PASSWORD = "postgres";
+//    private static final String JDBC_URL = "jdbc:postgresql://localhost:5432/comment_service_db";
+//    private static final String JDBC_USER = "postgres";
+//    private static final String JDBC_PASSWORD = "postgres";
+
+    private String JDBC_URL;
+    private String JDBC_USER;
+    private String JDBC_PASSWORD;
 
     private static final String COMMENT_TABLE = "CREATE TABLE IF NOT EXISTS COMMENT (" +
             "ID SERIAL PRIMARY KEY," +
+            "POST_ID BIGINT," +
             "AUTHOR_ID INT," +
-            "CONTENT TEXT," +
-            "LIKES INT" +
+            "CONTENT TEXT" +
             ")";
-//    "CREATION_TIME TIMESTAMP" +
+
 
     public CommentRepository() {
+        JDBC_URL = PropertyManager.getPropertyAsString("db.connection.string",
+                "jdbc:postgresql://localhost:5432/comment_service_db");
+        JDBC_USER = PropertyManager.getPropertyAsString("db.connection.user", "postgres");
+        JDBC_PASSWORD = PropertyManager.getPropertyAsString("db.connection.password", "postgres");
         initializeDatabase();
     }
 
@@ -67,13 +76,12 @@ public class CommentRepository {
 
     public Comment addComment(Comment comment) {
 //        , CREATION_TIME
-        String query = "INSERT INTO COMMENT (AUTHOR_ID, CONTENT, LIKES) VALUES (?, ?, ?)";
+        String query = "INSERT INTO COMMENT (AUTHOR_ID, POST_ID, CONTENT) VALUES (?, ?, ?)";
         try (Connection connection = DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASSWORD);
              PreparedStatement preparedStatement = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
             preparedStatement.setLong(1, comment.getAuthorId());
-            preparedStatement.setString(2, comment.getContent());
-            preparedStatement.setInt(3, comment.getLikes());
-//            preparedStatement.setTimestamp(4, new Timestamp(comment.getCreationTime().getTime()));
+            preparedStatement.setLong(2, comment.getPostId());
+            preparedStatement.setString(3, comment.getContent());
 
             int affectedRows = preparedStatement.executeUpdate();
 
@@ -93,21 +101,21 @@ public class CommentRepository {
     private Comment mapResultSetToComment(ResultSet resultSet) throws SQLException {
         Comment comment = new Comment();
         comment.setCommentId(resultSet.getLong("ID"));
+        comment.setPostId(resultSet.getLong("POST_ID"));
         comment.setAuthorId(resultSet.getLong("AUTHOR_ID"));
         comment.setContent(resultSet.getString("CONTENT"));
-        comment.setLikes(resultSet.getInt("LIKES"));
 //        comment.setCreationTime(resultSet.getTimestamp("CREATION_TIME"));
         return comment;
     }
 
     public void updateComment(Comment comment) {
 //        CREATION_TIME=?
-        String query = "UPDATE COMMENT SET AUTHOR_ID=?, CONTENT=?, LIKES=? WHERE ID=?";
+        String query = "UPDATE COMMENT SET AUTHOR_ID=?, POST_ID=?, CONTENT=? WHERE ID=?";
         try (Connection connection = DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASSWORD);
              PreparedStatement preparedStatement = connection.prepareStatement(query)) {
             preparedStatement.setLong(1, comment.getAuthorId());
-            preparedStatement.setString(2, comment.getContent());
-            preparedStatement.setInt(3, comment.getLikes());
+            preparedStatement.setLong(2, comment.getPostId());
+            preparedStatement.setString(3, comment.getContent());
 
             preparedStatement.executeUpdate();
         } catch (SQLException e) {

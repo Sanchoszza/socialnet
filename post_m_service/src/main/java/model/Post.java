@@ -1,6 +1,8 @@
 package model;
 
 
+import java.util.List;
+
 public class Post {
 
     private Long postId;
@@ -8,7 +10,8 @@ public class Post {
     private String content;
     private String creationTime;
     private int likes;
-    private int comments;
+    private List<Comment> comments;
+
     private int views;
     private String tags;
 
@@ -16,13 +19,12 @@ public class Post {
     }
 
     public Post(Long postId, Long authorId, String content, String creationTime,
-                int likes, int comments, int views, String tags) {
+                int likes, int views, String tags) {
         this.postId = postId;
         this.authorId = authorId;
         this.content = content;
         this.creationTime = creationTime;
         this.likes = likes;
-        this.comments = comments;
         this.views = views;
         this.tags = tags;
     }
@@ -68,11 +70,11 @@ public class Post {
         this.likes = likes;
     }
 
-    public int getComments() {
+    public List<Comment> getComments() {
         return comments;
     }
 
-    public void setComments(int comments) {
+    public void setComments(List<Comment> comments) {
         this.comments = comments;
     }
 

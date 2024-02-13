@@ -4,6 +4,8 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import servlet.CommentServlet;
+import utils.Common;
+import utils.PropertyManager;
 
 public class StartComment {
 
@@ -15,6 +17,9 @@ public class StartComment {
     private static Server server;
 
     public static void main(String[] args) throws Exception {
+
+        PropertyManager.load();
+        Common.configure();
         runServer(PORT, CONTEXT_PATH);
     }
 

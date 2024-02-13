@@ -1,8 +1,9 @@
-package utils;/*
+/*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
+package utils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +22,7 @@ public class PropertyManager
     private static Logger log = LoggerFactory.getLogger(PropertyManager.class.getSimpleName());
     private static Properties properties = new Properties();
 
-    public static final String propsPath = "./user_m_service/main.props";
+    public static final String propsPath = "./like_m_service/main.props";
     public static Map<String, String> getPropertiesByPrefix(String prefix){
         Map<String, String> map = new HashMap<>();
         

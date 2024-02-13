@@ -65,15 +65,17 @@ public class CommentServlet extends HttpServlet {
         ObjectMapper objectMapper = new ObjectMapper();
         Comment newComment = objectMapper.readValue(json, Comment.class);
 
-
         Comment addedComment = commentRepository.addComment(newComment);
 
         if (addedComment != null) {
+            response.setContentType("application/json");
             response.getWriter().write(objectMapper.writeValueAsString(addedComment));
         } else {
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write("Failed to add comment!");
         }
     }
+
 
     @Override
     protected void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
